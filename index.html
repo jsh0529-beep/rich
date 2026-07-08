@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>나는 얼마나 부자가 될 수 있을까? · 부자 지수 테스트</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700;900&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0E1C2E;          /* 잉크 네이비 */
+    --ink2:#152A44;
+    --paper:#F6EFDD;        /* 지폐 크림 */
+    --paper2:#EDE3C9;
+    --gold:#C9A24B;         /* 골드 */
+    --gold-lt:#E8CC7E;
+    --gold-dk:#9A7A2E;
+    --emerald:#1E6E4E;      /* 화폐 그린 */
+    --emerald-dk:#154E38;
+    --seal:#B3402F;         /* 인장 붉은색 */
+    --text:#1B2430;
+    --muted:#5A6472;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:"Noto Sans KR",sans-serif;
+    color:var(--text);
+    background:
+      radial-gradient(1200px 700px at 50% -10%, #1B3556 0%, var(--ink) 55%, #0A1524 100%) fixed;
+    min-height:100dvh;
+    display:block;
+    padding:18px 14px calc(122px + env(safe-area-inset-bottom));
+    overflow-x:hidden;
+  }
+  .wrap{width:100%;max-width:560px;margin:0 auto;
+    min-height:calc(100dvh - 150px);
+    display:flex;flex-direction:column;justify-content:center}
+
+  /* ---------- 지폐/증서 카드 ---------- */
+  .note{
+    position:relative;
+    background:
+      linear-gradient(150deg,var(--paper) 0%, var(--paper2) 100%);
+    border-radius:10px;
+    padding:30px 26px 28px;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.05);
+    overflow:hidden;
+  }
+  .note::before{ /* 이중 골드 프레임 */
+    content:"";position:absolute;inset:12px;border-radius:6px;
+    border:1.5px solid var(--gold);
+    box-shadow:inset 0 0 0 3px rgba(201,162,75,.28);
+    pointer-events:none;z-index:2;
+  }
+  .rosette{position:absolute;opacity:.16;pointer-events:none;z-index:0;mix-blend-mode:multiply}
+  .content{position:relative;z-index:3}
+
+  .eyebrow{
+    font-size:11px;letter-spacing:.32em;text-transform:uppercase;
+    color:var(--gold-dk);font-weight:700;text-align:center;margin-bottom:14px;
+  }
+  .eyebrow b{color:var(--emerald)}
+  .serial{
+    position:absolute;top:20px;right:24px;z-index:3;
+    font-family:"Noto Sans KR";font-weight:700;font-size:10px;letter-spacing:.15em;
+    color:var(--gold-dk);opacity:.8;
+  }
+  .denom{
+    position:absolute;top:16px;left:22px;z-index:3;
+    font-family:"Noto Serif KR";font-weight:900;color:var(--emerald);
+    font-size:22px;opacity:.85;
+  }
+
+  /* ---------- 커버 ---------- */
+  .cover .head{font-family:"Noto Serif KR";font-weight:900;text-align:center;line-height:1.28;
+    font-size:clamp(26px,7.2vw,38px);color:var(--ink);margin:6px 0 4px;letter-spacing:-.01em}
+  .cover .head .hl{color:var(--emerald);position:relative;white-space:nowrap}
+  .cover .head .hl::after{content:"";position:absolute;left:0;right:0;bottom:2px;height:8px;
+    background:linear-gradient(90deg,var(--gold-lt),var(--gold));opacity:.45;z-index:-1;border-radius:4px}
+  .cover .sub{text-align:center;color:var(--muted);font-size:14px;line-height:1.6;margin:14px 8px 4px}
+  .medallion{width:150px;height:150px;margin:20px auto 8px;position:relative;display:grid;place-items:center}
+  .medallion .ring{position:absolute;inset:0}
+  .medallion .val{font-family:"Noto Serif KR";font-weight:900;color:var(--gold-dk);
+    font-size:48px;line-height:1;text-align:center}
+  .medallion .val small{display:block;font-family:"Noto Sans KR";font-weight:700;
+    font-size:11px;letter-spacing:.35em;color:var(--emerald);margin-top:6px}
+  .meta{display:flex;justify-content:center;gap:20px;margin:16px 0 4px;flex-wrap:wrap}
+  .meta .chip{display:flex;flex-direction:column;align-items:center;gap:2px}
+  .meta .chip b{font-family:"Noto Serif KR";font-weight:900;color:var(--ink);font-size:20px}
+  .meta .chip span{font-size:11px;color:var(--muted);letter-spacing:.05em}
+  .meta .div{width:1px;background:var(--gold);opacity:.4}
+
+  .btn{
+    display:block;width:100%;border:none;cursor:pointer;
+    font-family:"Noto Sans KR";font-weight:900;font-size:17px;letter-spacing:.04em;
+    color:var(--paper);padding:16px;border-radius:8px;margin-top:20px;
+    background:linear-gradient(135deg,var(--emerald),var(--emerald-dk));
+    box-shadow:0 10px 22px -8px rgba(21,78,56,.75), inset 0 1px 0 rgba(255,255,255,.18);
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .btn:hover{transform:translateY(-2px);box-shadow:0 16px 28px -10px rgba(21,78,56,.85)}
+  .btn:active{transform:translateY(0)}
+  .btn.gold{background:linear-gradient(135deg,var(--gold-lt),var(--gold-dk));color:#20160a;
+    box-shadow:0 10px 22px -8px rgba(154,122,46,.7), inset 0 1px 0 rgba(255,255,255,.35)}
+  .btn.ghost{background:transparent;color:var(--emerald-dk);border:1.5px solid var(--gold);
+    box-shadow:none;font-size:15px;padding:13px}
+  .btn.ghost:hover{background:rgba(201,162,75,.12);transform:none}
+
+  /* ---------- 퀴즈 ---------- */
+  .quiz{display:none}
+  .qtop{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+  .qcount{font-family:"Noto Serif KR";font-weight:900;color:var(--emerald);font-size:15px}
+  .qcount b{font-size:24px}
+  .qcat{font-size:11px;font-weight:700;letter-spacing:.15em;color:var(--gold-dk);
+    background:rgba(201,162,75,.16);padding:5px 10px;border-radius:20px}
+  .bar{height:8px;background:rgba(21,78,56,.14);border-radius:20px;overflow:hidden;margin:10px 0 22px}
+  .bar>i{display:block;height:100%;width:5%;border-radius:20px;
+    background:linear-gradient(90deg,var(--gold),var(--emerald));transition:width .4s cubic-bezier(.2,.8,.2,1)}
+  .qtext{font-family:"Noto Serif KR";font-weight:700;font-size:clamp(18px,4.6vw,22px);
+    line-height:1.5;color:var(--ink);min-height:88px;display:flex;align-items:center}
+  .opts{display:flex;flex-direction:column;gap:11px;margin-top:18px}
+  .opt{
+    text-align:left;cursor:pointer;background:#fff;border:1.5px solid rgba(21,78,56,.18);
+    border-radius:9px;padding:15px 16px;font-size:15px;font-weight:500;color:var(--text);
+    display:flex;align-items:center;gap:12px;transition:all .12s ease;line-height:1.4;
+  }
+  .opt .mk{flex:0 0 26px;height:26px;border-radius:50%;border:1.5px solid var(--gold);
+    display:grid;place-items:center;font-family:"Noto Serif KR";font-weight:900;
+    color:var(--gold-dk);font-size:13px;transition:all .12s ease}
+  .opt:hover{border-color:var(--emerald);background:#FCFAF2;transform:translateX(3px)}
+  .opt:hover .mk{background:var(--emerald);color:#fff;border-color:var(--emerald)}
+
+  /* ---------- 결과 증서 ---------- */
+  .result{display:none}
+  .cert-eyebrow{text-align:center;font-family:"Noto Serif KR";font-weight:700;
+    letter-spacing:.3em;color:var(--gold-dk);font-size:13px;margin-bottom:2px}
+  .cert-title{text-align:center;font-family:"Noto Serif KR";font-weight:900;
+    font-size:clamp(22px,6vw,30px);color:var(--ink);margin:4px 0 2px}
+  .score-ring{width:180px;height:180px;margin:14px auto 6px;position:relative;display:grid;place-items:center}
+  .score-ring svg{position:absolute;inset:0;transform:rotate(-90deg)}
+  .score-ring .num{font-family:"Noto Serif KR";font-weight:900;font-size:56px;line-height:1;color:var(--emerald)}
+  .score-ring .lbl{font-size:11px;font-weight:700;letter-spacing:.3em;color:var(--gold-dk);margin-top:4px}
+  .tier{text-align:center;margin:6px 0 2px}
+  .tier .badge{display:inline-block;font-family:"Noto Serif KR";font-weight:900;font-size:22px;
+    color:#fff;padding:8px 20px;border-radius:30px;letter-spacing:.02em;
+    background:linear-gradient(135deg,var(--emerald),var(--emerald-dk));
+    box-shadow:0 8px 18px -8px rgba(21,78,56,.7)}
+  .tier .desc{color:var(--muted);font-size:14px;line-height:1.65;margin:16px 6px 0}
+  .payout{margin:18px 0 4px;padding:16px;border-radius:8px;text-align:center;
+    background:linear-gradient(135deg,rgba(201,162,75,.16),rgba(30,110,78,.1));
+    border:1px dashed var(--gold)}
+  .payout .k{font-size:11px;letter-spacing:.2em;color:var(--gold-dk);font-weight:700}
+  .payout .v{font-family:"Noto Serif KR";font-weight:900;font-size:26px;color:var(--emerald-dk);margin-top:4px}
+  .tip{margin-top:14px;padding:14px 16px;background:#fff;border-left:4px solid var(--gold);
+    border-radius:0 8px 8px 0;font-size:13.5px;line-height:1.6;color:var(--text)}
+  .tip b{color:var(--emerald-dk)}
+  .seal{position:absolute;right:16px;bottom:14px;z-index:4;width:88px;height:88px;
+    opacity:0;transform:scale(1.6) rotate(-14deg);transition:opacity .5s ease, transform .5s cubic-bezier(.2,1.4,.4,1)}
+  .seal.on{opacity:.92;transform:scale(1) rotate(-12deg)}
+  .disc{text-align:center;font-size:10.5px;color:var(--muted);margin-top:14px;opacity:.8;line-height:1.5}
+  .row{display:flex;gap:10px;margin-top:16px}
+  .row .btn{margin-top:0;flex:1}
+  .toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:var(--paper);padding:11px 20px;border-radius:30px;font-size:13px;
+    font-weight:700;opacity:0;transition:all .3s ease;z-index:60;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+  .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* ---------- 돈의 언어 홍보 배너 ---------- */
+  .promo-space{height:0}
+  .promo{
+    position:fixed;left:0;right:0;bottom:0;z-index:50;
+    display:flex;justify-content:center;padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+    background:linear-gradient(0deg, rgba(8,18,32,.96), rgba(8,18,32,.72) 70%, transparent);
+  }
+  .promo a{
+    text-decoration:none;width:100%;max-width:560px;
+    display:flex;align-items:center;gap:14px;
+    background:linear-gradient(135deg,#1A3350,#0E1C2E);
+    border:1.5px solid var(--gold);border-radius:12px;padding:11px 14px;
+    box-shadow:0 14px 30px -12px rgba(0,0,0,.7);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .promo a:hover{transform:translateY(-2px);box-shadow:0 20px 36px -14px rgba(201,162,75,.45)}
+  .bookcover{flex:0 0 46px;height:62px;border-radius:4px;position:relative;overflow:hidden;
+    background:linear-gradient(160deg,var(--emerald),var(--emerald-dk));
+    box-shadow:0 6px 14px -6px rgba(0,0,0,.6);display:grid;place-items:center;text-align:center}
+  .bookcover .bt{font-family:"Noto Serif KR";font-weight:900;color:var(--gold-lt);
+    font-size:9px;line-height:1.25;letter-spacing:.02em;padding:0 3px}
+  .bookcover::after{content:"";position:absolute;left:5px;top:0;bottom:0;width:1.5px;background:rgba(0,0,0,.25)}
+  .promo .txt{flex:1;min-width:0}
+  .promo .kicker{font-size:10px;letter-spacing:.18em;color:var(--gold);font-weight:700;margin-bottom:2px}
+  .promo .title{font-family:"Noto Serif KR";font-weight:900;color:var(--paper);font-size:16px;line-height:1.25}
+  .promo .sub{font-size:11px;color:#AEB9C8;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .promo .cta{flex:0 0 auto;background:linear-gradient(135deg,var(--gold-lt),var(--gold-dk));
+    color:#20160a;font-weight:900;font-size:13px;padding:10px 14px;border-radius:8px;white-space:nowrap;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+
+  @media (max-width:400px){
+    .promo .sub{display:none}
+    .note{padding:26px 18px 24px}
+  }
+  .fade{animation:fade .45s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <!-- ============ 커버 ============ -->
+  <section class="note cover" id="cover">
+    <div class="denom">富</div>
+    <div class="serial">No. 돈의언어-2026</div>
+    <svg class="rosette" id="rosetteTL" width="220" height="220" style="top:-70px;left:-70px"></svg>
+    <svg class="rosette" id="rosetteBR" width="220" height="220" style="bottom:-70px;right:-70px"></svg>
+    <div class="content">
+      <div class="eyebrow">돈의 언어 · <b>부자 지수 테스트</b></div>
+      <h1 class="head">나는 <span class="hl">얼마나 부자</span>가<br>될 수 있을까?</h1>
+      <div class="medallion">
+        <svg class="ring" id="coverRing" viewBox="0 0 150 150"></svg>
+        <div class="val">富<small>WEALTH INDEX</small></div>
+      </div>
+      <p class="sub">돈을 대하는 20가지 태도로 알아보는<br>당신의 부(富) 잠재력. 지금 진단해 보세요.</p>
+      <div class="meta">
+        <div class="chip"><b>100</b><span>문제 은행</span></div>
+        <div class="div"></div>
+        <div class="chip"><b>20</b><span>랜덤 출제</span></div>
+        <div class="div"></div>
+        <div class="chip"><b>3분</b><span>소요 시간</span></div>
+      </div>
+      <button class="btn" onclick="start()">테스트 시작하기</button>
+    </div>
+  </section>
+
+  <!-- ============ 퀴즈 ============ -->
+  <section class="note quiz" id="quiz">
+    <div class="content">
+      <div class="qtop">
+        <div class="qcount"><b id="qnow">1</b> / 20</div>
+        <div class="qcat" id="qcat">저축</div>
+      </div>
+      <div class="bar"><i id="barFill"></i></div>
+      <div class="qtext" id="qtext">질문</div>
+      <div class="opts" id="opts"></div>
+    </div>
+  </section>
+
+  <!-- ============ 결과 증서 ============ -->
+  <section class="note result" id="result">
+    <div class="denom">富</div>
+    <div class="serial" id="certNo">No. 0000</div>
+    <svg class="rosette" id="rosetteRes" width="240" height="240" style="top:-80px;right:-80px"></svg>
+    <div class="content">
+      <div class="cert-eyebrow">부(富) 잠재력 증서</div>
+      <h2 class="cert-title">당신의 부자 지수는</h2>
+      <div class="score-ring">
+        <svg viewBox="0 0 180 180">
+          <circle cx="90" cy="90" r="80" fill="none" stroke="rgba(30,110,78,.14)" stroke-width="12"/>
+          <circle id="scoreArc" cx="90" cy="90" r="80" fill="none" stroke="url(#gr)" stroke-width="12"
+            stroke-linecap="round" stroke-dasharray="502" stroke-dashoffset="502"/>
+          <defs><linearGradient id="gr" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#E8CC7E"/><stop offset="1" stop-color="#1E6E4E"/>
+          </linearGradient></defs>
+        </svg>
+        <div><div class="num" id="scoreNum">0</div><div class="lbl">/ 100 점</div></div>
+      </div>
+      <div class="tier">
+        <span class="badge" id="tierBadge">유형</span>
+        <p class="desc" id="tierDesc">설명</p>
+      </div>
+      <div class="payout">
+        <div class="k">예상 부(富) 도달 경로</div>
+        <div class="v" id="payoutV">—</div>
+      </div>
+      <div class="tip" id="tipBox"></div>
+      <svg class="seal" id="seal" viewBox="0 0 100 100"></svg>
+      <div class="row">
+        <button class="btn gold" onclick="share()">결과 복사</button>
+        <button class="btn ghost" onclick="restart()">다시 하기</button>
+      </div>
+      <p class="disc">※ 본 테스트는 돈을 대하는 태도를 재미로 진단하는 콘텐츠이며, 실제 투자·재무 성과를 보장하지 않습니다.</p>
+    </div>
+  </section>
+</div>
+
+<div class="promo-space"></div>
+
+<!-- ============ 돈의 언어 홍보 배너 ============ -->
+<div class="promo">
+  <a href="https://m.yes24.com/goods/detail/191222385" target="_blank" rel="noopener">
+    <div class="bookcover"><span class="bt">돈의<br>언어</span></div>
+    <div class="txt">
+      <div class="kicker">국영수보다 먼저</div>
+      <div class="title">돈의 언어</div>
+      <div class="sub">아이와 부모가 함께 읽는 돈 공부의 시작</div>
+    </div>
+    <div class="cta">구매하기 →</div>
+  </a>
+</div>
+
+<div class="toast" id="toast">결과가 복사되었어요</div>
+
+<script>
+/* =========================================================
+   문제 은행 100문제  ─ 형식: ["카테고리","질문",[[보기,점수]...]]
+   점수: 0~5 (좋은 습관/정답=5). 결과는 획득/최대 정규화(0~100).
+   ========================================================= */
+const BANK = [
+/* 저축·예산 */
+["저축","월급이 들어오면 가장 먼저 하는 일은?",[["저축·투자로 자동이체부터 뺀다",5],["고정지출을 먼저 낸다",3],["쓰고 남으면 저축한다",1],["일단 쓰고 본다",0]]],
+["저축","생활비 몇 개월치의 비상금을 갖고 있나요?",[["6개월치 이상 확보",5],["3개월치 정도",3],["한 달치 남짓",2],["없다",0]]],
+["저축","소득 대비 저축·투자 비율은?",[["30% 이상",5],["20%대",4],["10%대",2],["거의 못 한다",0]]],
+["저축","가계부(지출 기록) 습관은?",[["앱·가계부로 매일 관리",5],["대략 머릿속으로 파악",3],["가끔 몰아서 본다",1],["안 한다",0]]],
+["저축","'선저축 후지출' 원칙에 대해?",[["무조건 먼저 저축한다",5],["대체로 먼저 저축한다",3],["남는 돈이 있으면 한다",1],["개념이 없다",0]]],
+["저축","보너스·상여금이 생기면?",[["대부분 저축·투자로 넣는다",5],["절반은 저축, 절반은 소비",3],["작은 보상 후 나머지 저축",2],["기다렸다는 듯 다 쓴다",0]]],
+["저축","저축 목표를 세우는 방식은?",[["금액·기한·목적이 구체적이다",5],["대략적인 목표는 있다",3],["막연히 '많이 모으자'",1],["따로 없다",0]]],
+["저축","'풍차돌리기'처럼 목적별 통장 분리를?",[["목적별로 나눠 관리한다",5],["한두 개로 나눠둔다",3],["급여통장 하나만 쓴다",1],["관리 개념이 없다",0]]],
+["저축","연말정산·세액공제(연금저축·IRP)를?",[["한도까지 챙긴다",5],["일부만 활용한다",3],["있는 줄만 안다",1],["전혀 모른다",0]]],
+["저축","목돈이 생겼을 때 예·적금 금리는?",[["여러 곳 비교 후 가입한다",5],["주거래 은행에서 가입",3],["아무데나 넣는다",1],["그냥 통장에 둔다",0]]],
+
+/* 소비·지출 통제 */
+["소비","충동구매를 조절하는 방법은?",[["'24시간 뒤 결제' 규칙이 있다",5],["장바구니에 담아뒀다 산다",3],["필요하면 바로 산다",1],["세일이면 무조건 산다",0]]],
+["소비","고정 구독 서비스(OTT·앱)를?",[["주기적으로 점검·해지한다",5],["가끔 확인한다",3],["결제되는지도 잘 모른다",1],["많을수록 좋다고 본다",0]]],
+["소비","커피·간식 같은 소액 지출은?",[["'라떼값'도 계산해 관리한다",5],["적당히 즐긴다",3],["별생각 없이 쓴다",1],["매일 습관적으로 쓴다",0]]],
+["소비","비싼 물건을 살 때 기준은?",[["가격보다 '사용당 비용'을 본다",5],["예산 안에서 산다",4],["갖고 싶으면 산다",1],["할부로 질러본다",0]]],
+["소비","'좋은 소비'에 대한 생각은?",[["가치를 키우는 데 쓰는 것",5],["기분 좋게 쓰는 것",3],["남에게 보이기 좋은 것",1],["많이 쓰는 것",0]]],
+["소비","명품·유행 소비에 대한 태도는?",[["필요와 자산을 먼저 따진다",5],["가끔 나를 위한 보상",3],["남들 사면 나도 산다",1],["빚내서라도 산다",0]]],
+["소비","외식·배달 지출 관리는?",[["예산을 정해두고 지킨다",5],["대체로 절제한다",3],["기분 따라 쓴다",1],["거의 매일 시켜 먹는다",0]]],
+["소비","'세일'을 보면 드는 생각은?",[["필요 없으면 안 산다",5],["필요한 것만 산다",4],["싸니까 일단 담는다",1],["안 사면 손해 같다",0]]],
+["소비","월말 통장 잔고는 보통?",[["계획대로 남아 있다",5],["빠듯하지만 마이너스는 아니다",3],["거의 0에 가깝다",1],["자주 마이너스다",0]]],
+["소비","'가성비'와 '가심비' 중 소비 기준은?",[["둘을 상황에 맞게 판단한다",5],["대체로 가성비",4],["대체로 가심비",2],["기준이 없다",0]]],
+
+/* 투자 지식 */
+["투자지식","복리(複利)를 한마디로 설명하면?",[["이자에 다시 이자가 붙는 것",5],["원금에만 붙는 이자",1],["세금의 한 종류",0],["잘 모른다",0]]],
+["투자지식","'72의 법칙'은 무엇을 알려주나?",[["원금이 2배 되는 기간",5],["세금 계산법",1],["대출 한도 계산",0],["들어본 적 없다",0]]],
+["투자지식","인플레이션이 지속되면 현금의 가치는?",[["시간이 갈수록 떨어진다",5],["그대로 유지된다",1],["오히려 올라간다",0],["관계없다",0]]],
+["투자지식","분산투자를 하는 가장 큰 이유는?",[["위험을 줄이기 위해",5],["세금을 아끼려고",1],["수수료를 줄이려고",1],["유행이라서",0]]],
+["투자지식","인덱스펀드·ETF의 특징은?",[["시장 전체에 낮은 비용으로 투자",5],["원금이 보장된다",0],["항상 개별주보다 수익 높다",0],["잘 모른다",0]]],
+["투자지식","리스크와 기대수익의 관계는?",[["대체로 위험이 클수록 기대수익도 크다",5],["위험과 수익은 무관하다",0],["위험이 작을수록 수익이 크다",0],["잘 모른다",0]]],
+["투자지식","적립식(달러코스트에버리징) 투자의 장점은?",[["평균 매입단가를 낮춰 변동성에 덜 흔들림",5],["항상 최고가에 판다",0],["원금 손실이 없다",0],["잘 모른다",0]]],
+["투자지식","'좋은 빚'과 '나쁜 빚'을 나누는 기준은?",[["미래 가치를 키우느냐 소비로 사라지느냐",5],["금액이 크냐 작냐",1],["은행이냐 카드냐",1],["빚은 다 나쁘다",1]]],
+["투자지식","주식과 채권의 기본 차이는?",[["주식은 지분, 채권은 빌려주고 이자 받는 것",5],["둘 다 예금과 같다",0],["채권이 항상 더 위험하다",0],["잘 모른다",0]]],
+["투자지식","장기 투자에서 '시간'의 역할은?",[["복리가 커지는 가장 강력한 무기",5],["길수록 손해다",0],["아무 영향 없다",0],["잘 모른다",0]]],
+["투자지식","'계란을 한 바구니에 담지 말라'는 말의 뜻은?",[["자산을 나눠 위험을 분산하라",5],["예금만 하라",1],["빚을 지지 마라",1],["잘 모른다",0]]],
+["투자지식","수수료·보수가 장기 수익에 미치는 영향은?",[["복리로 누적돼 무시 못 할 차이를 만든다",5],["거의 영향 없다",1],["오히려 이득이다",0],["잘 모른다",0]]],
+["투자지식","'시장을 이기려 타이밍 잡기'에 대해?",[["대부분 실패하므로 꾸준함이 낫다",5],["누구나 쉽게 성공한다",0],["감으로 하면 된다",0],["잘 모른다",0]]],
+["투자지식","비상금과 투자금의 관계는?",[["비상금 확보 뒤 여윳돈으로 투자",5],["비상금 없이 다 투자",1],["빚내서 투자",0],["구분하지 않는다",1]]],
+["투자지식","금리가 오르면 일반적으로 채권 가격은?",[["대체로 떨어진다",5],["항상 오른다",0],["변하지 않는다",0],["잘 모른다",0]]],
+
+/* 돈에 대한 마음가짐 */
+["마음가짐","돈에 대한 당신의 기본 생각은?",[["잘 쓰면 삶을 키우는 도구다",5],["많으면 좋은 것",3],["있으면 쓰는 것",1],["생각해 본 적 없다",0]]],
+["마음가짐","'부자'를 볼 때 드는 감정은?",[["배울 점을 찾는다",5],["부럽다",3],["운이 좋았겠지",1],["대체로 부정적이다",0]]],
+["마음가짐","돈 이야기를 대하는 태도는?",[["숨기지 않고 공부하듯 나눈다",5],["필요할 때만 한다",3],["부담스럽다",1],["돈 얘기는 천박하다고 본다",0]]],
+["마음가짐","실패한 지출·투자를 겪으면?",[["원인을 복기하고 배운다",5],["잊고 넘어간다",2],["운을 탓한다",1],["크게 좌절한다",0]]],
+["마음가짐","'돈은 얼마면 충분한가'라는 질문에?",[["내 목표에 맞는 기준이 있다",5],["많을수록 좋다",2],["생각해 본 적 없다",1],["끝이 없다고 느낀다",0]]],
+["마음가짐","즉각적 만족 vs 미래의 더 큰 보상, 당신은?",[["미래의 큰 보상을 택한다",5],["상황에 따라 다르다",3],["지금 만족이 우선",1],["항상 지금 쓴다",0]]],
+["마음가짐","돈 관리에서 가장 중요한 것은?",[["꾸준한 습관",5],["큰 한 방",1],["운",0],["타고난 감각",1]]],
+["마음가짐","'나도 부자가 될 수 있다'는 믿음은?",[["구체적 계획과 함께 강하다",5],["막연히 그렇다",2],["잘 모르겠다",1],["나와는 먼 이야기다",0]]],
+["마음가짐","비교 소비(남과 비교한 지출)에 대해?",[["내 기준으로 판단한다",5],["가끔 흔들린다",3],["자주 따라 산다",1],["항상 남을 의식한다",0]]],
+["마음가짐","돈 공부에 시간을 쓰는 편인가요?",[["정기적으로 배우고 읽는다",5],["가끔 관심 갖는다",3],["필요할 때만",1],["거의 안 한다",0]]],
+["마음가짐","'절약'을 바라보는 시각은?",[["가치를 지키는 선택",5],["필요한 미덕",4],["궁상맞은 일",1],["삶의 질을 떨어뜨린다",0]]],
+["마음가짐","돈을 잃을까 두려울 때 당신은?",[["감정과 사실을 분리해 판단",5],["일단 멈추고 알아본다",4],["불안해서 서둘러 판다",1],["회피한다",0]]],
+
+/* 소득·성장 */
+["소득","현재 수입 외에 추가 소득 파이프라인은?",[["둘 이상 만들어 두었다",5],["하나 정도 있다",3],["만들 계획 중이다",2],["없다·관심 없다",0]]],
+["소득","자기계발·기술 투자를 하나요?",[["꾸준히 배우고 몸값을 올린다",5],["가끔 한다",3],["여유 있을 때만",1],["거의 안 한다",0]]],
+["소득","연봉·수입을 올리려는 노력은?",[["협상·이직·부업 등 적극적",5],["기회가 오면 잡는다",3],["현상 유지면 만족",1],["생각해 본 적 없다",0]]],
+["소득","'시간당 가치'라는 개념을?",[["내 시간의 가치를 계산해 쓴다",5],["대략 인식은 한다",3],["별로 안 따진다",1],["모른다",0]]],
+["소득","돈 되는 기회·정보를 대하는 태도는?",[["배우고 검증한 뒤 실행한다",5],["관심 갖고 알아본다",3],["귀찮아서 넘긴다",1],["관심 없다",0]]],
+["소득","네트워크(사람 관계)에 대한 생각은?",[["장기적 자산으로 관리한다",5],["필요할 때 챙긴다",3],["잘 신경 못 쓴다",1],["관심 없다",0]]],
+["소득","새로운 도전(창업·투자·이직) 앞에서?",[["리스크를 계산해 감수한다",5],["신중히 고민한다",3],["대체로 피한다",1],["절대 안 한다",0]]],
+["소득","'돈이 나를 위해 일하게 한다'는 말은?",[["자산이 소득을 만드는 구조를 만든다",5],["멋진 말 정도로 안다",2],["무슨 뜻인지 모른다",1],["불가능하다고 본다",0]]],
+["소득","실력·평판을 쌓는 것에 대해?",[["장기적으로 소득을 키우는 투자",5],["중요하다고 생각",4],["당장은 급하지 않다",1],["별로 신경 안 쓴다",0]]],
+["소득","돈 문제를 미루지 않고 처리하나요?",[["바로 확인하고 해결한다",5],["대체로 챙긴다",3],["자주 미룬다",1],["방치하는 편이다",0]]],
+
+/* 빚·신용·리스크 관리 */
+["신용","신용카드 사용 원칙은?",[["한도 내에서 계획적으로만 쓴다",5],["대체로 관리한다",3],["필요하면 그때그때",1],["돌려막기도 한다",0]]],
+["신용","신용점수(개인신용평점) 관리는?",[["점수를 알고 꾸준히 관리한다",5],["대략 알고 있다",3],["관심은 없다",1],["뭔지 모른다",0]]],
+["신용","대출을 받을 때 기준은?",[["상환계획과 금리를 꼼꼼히 따진다",5],["필요한 만큼만 받는다",4],["한도까지 받는다",1],["일단 받고 본다",0]]],
+["신용","할부·리볼빙(최소결제)에 대해?",[["되도록 안 쓰고 일시불 선호",5],["무이자 할부만 이용",4],["자주 할부로 산다",1],["리볼빙을 자주 쓴다",0]]],
+["신용","보험(위험 대비)에 대한 태도는?",[["필요한 보장만 점검해 가입",5],["대략 들어두었다",3],["과하게 많이 들었다",1],["전혀 없다",0]]],
+["신용","빚을 갚는 순서를 정한다면?",[["금리 높은 빚부터 갚는다",5],["금액 큰 것부터",3],["아무거나 먼저",1],["최소만 갚고 미룬다",0]]],
+["신용","'현금흐름'이라는 말을 이해하나요?",[["들어오고 나가는 돈의 흐름을 관리",5],["대충 안다",3],["잘 모른다",1],["처음 듣는다",0]]],
+["신용","예상치 못한 큰 지출(수리·병원)이 생기면?",[["비상금으로 감당한다",5],["예산을 조정해 해결",4],["빚을 낸다",1],["감당 못 해 당황한다",0]]],
+["신용","자산과 부채를 정리해 본 적 있나요?",[["순자산을 주기적으로 점검한다",5],["가끔 계산해 본다",3],["대충만 안다",1],["해본 적 없다",0]]],
+["신용","'수익보다 잃지 않는 게 먼저'라는 말은?",[["원금 보전이 장기 성공의 핵심",5],["일리 있다",4],["소극적이라 별로",1],["동의하지 않는다",0]]],
+
+/* 장기·목표·습관 */
+["목표","10년 뒤 재무 목표가 있나요?",[["구체적 숫자와 계획이 있다",5],["대략의 그림은 있다",3],["막연하다",1],["없다",0]]],
+["목표","'복리를 위해 일찍 시작'에 대해?",[["작은 돈이라도 지금 시작한다",5],["곧 시작할 계획이다",3],["여유 생기면 하겠다",1],["나중에 생각한다",0]]],
+["목표","돈 관리 습관은 얼마나 지속되나요?",[["몇 년째 꾸준히 유지",5],["대체로 이어간다",3],["자주 흐지부지",1],["매번 실패한다",0]]],
+["목표","목표를 위해 지금의 즐거움을 미룰 수 있나요?",[["필요하면 기꺼이 미룬다",5],["어느 정도 가능",3],["잘 못 참는다",1],["전혀 못 한다",0]]],
+["목표","은퇴·노후 준비를 시작했나요?",[["연금 등으로 이미 준비 중",5],["곧 시작하려 한다",3],["막연히 걱정만",1],["생각 안 한다",0]]],
+["목표","돈 목표를 눈에 보이게 관리하나요?",[["진행률을 시각화해 점검",5],["가끔 확인한다",3],["머릿속에만 있다",1],["관리 안 한다",0]]],
+["목표","작은 목표 달성 경험이 쌓이면?",[["더 큰 목표로 확장한다",5],["만족하고 유지",3],["금방 잊는다",1],["목표 자체가 없다",0]]],
+["목표","'꾸준함 vs 한 방' 중 부의 길은?",[["작아도 꾸준함이 이긴다고 믿는다",5],["둘 다 필요하다",3],["한 방이 답이다",1],["운에 맡긴다",0]]],
+["목표","돈 계획을 가족·파트너와 공유하나요?",[["함께 목표를 세우고 관리",5],["가끔 상의한다",3],["따로따로 한다",1],["공유 안 한다",0]]],
+["목표","1년에 한 번 재무 상태를 점검하나요?",[["정기적으로 결산·재설계한다",5],["가끔 돌아본다",3],["거의 안 한다",1],["해본 적 없다",0]]],
+
+/* 자녀·교육·돈의 언어 (책 테마) */
+["돈교육","아이에게 돈을 가르친다면 언제부터?",[["일찍부터 생활 속에서 자연스럽게",5],["초등 고학년쯤",3],["성인이 되면",1],["학교가 가르치겠지",0]]],
+["돈교육","용돈을 줄 때 좋은 방법은?",[["정해진 규칙 속에서 스스로 관리하게",5],["필요할 때마다 준다",2],["달라는 대로 준다",1],["안 준다",1]]],
+["돈교육","아이가 갖고 싶은 걸 조를 때?",[["기다림·저축으로 얻는 법을 알려준다",5],["가끔 사준다",2],["떼쓰면 사준다",0],["무조건 안 사준다",1]]],
+["돈교육","'돈 = 노동·가치의 교환'이라는 개념을?",[["아이에게 꼭 가르쳐야 한다고 본다",5],["언젠가는 알겠지",2],["굳이 필요 없다",1],["생각 안 해봤다",0]]],
+["돈교육","아이 앞에서 돈 이야기를?",[["긍정적·교육적으로 나눈다",5],["되도록 안 한다",2],["다투는 모습만 보인다",0],["관심 없다",1]]],
+["돈교육","저축의 즐거움을 가르치는 법은?",[["목표를 정해 모으는 성취를 경험시킨다",5],["저금통을 준다",3],["잔소리로 시킨다",1],["가르치지 않는다",0]]],
+["돈교육","'돈보다 중요한 가치'에 대한 교육은?",[["돈과 함께 나눔·정직도 가르친다",5],["돈만 잘 벌면 된다",1],["따로 생각 안 함",2],["교육이 필요 없다",0]]],
+["돈교육","아이의 첫 투자 개념을 가르친다면?",[["작은 돈으로 원리를 체험시킨다",5],["위험하니 나중에",2],["가르칠 필요 없다",1],["잘 모르겠다",1]]],
+["돈교육","가족 예산을 아이와 공유하는 것에 대해?",[["나이에 맞게 함께 참여시킨다",5],["조금씩 알려준다",3],["아이는 몰라도 된다",1],["부담될까 숨긴다",1]]],
+["돈교육","'돈의 언어'를 배운다는 것은?",[["돈을 다루는 사고·습관을 익히는 것",5],["돈 많이 버는 법",2],["부자들의 비밀",2],["잘 모르겠다",1]]],
+
+/* 실전 행동·판단 */
+["실전","친구가 '확실한 투자'라며 권하면?",[["직접 검증하고 감당 가능한 만큼만",5],["일부만 신중히 넣는다",3],["믿고 크게 넣는다",0],["빚내서 따라간다",0]]],
+["실전","시장이 급락해 손실이 나면?",[["계획대로 원칙을 지킨다",5],["상황을 살피며 버틴다",4],["불안해서 다 판다",1],["더 크게 물타기 한다",1]]],
+["실전","'단기간 고수익 보장' 광고를 보면?",[["사기 신호로 의심한다",5],["일단 알아본다",3],["솔깃해서 관심 간다",1],["바로 투자한다",0]]],
+["실전","월 소득이 늘어나면 지출은?",[["생활비는 유지하고 저축을 늘린다",5],["약간만 늘린다",3],["소득만큼 늘어난다",1],["더 많이 쓴다",0]]],
+["실전","가계 재무를 점검하는 주기는?",[["매달 결산한다",5],["분기마다",3],["1년에 한 번",2],["거의 안 한다",0]]],
+["실전","돈에 관한 결정을 내릴 때?",[["감정과 데이터를 분리해 판단",5],["대체로 신중하다",4],["직감으로 결정",1],["즉흥적으로 결정",0]]],
+["실전","'절세'와 '탈세'의 차이를 아나요?",[["합법 절세와 불법 탈세를 구분한다",5],["대략 안다",3],["헷갈린다",1],["같은 거 아닌가",0]]],
+["실전","경제 뉴스·지표를 챙겨 보나요?",[["흐름을 이해하려 꾸준히 본다",5],["가끔 본다",3],["헤드라인만",1],["안 본다",0]]],
+["실전","'FOMO(놓칠까 봐)'로 투자한 적 있나요?",[["원칙을 지켜 휩쓸리지 않는다",5],["가끔 흔들린다",3],["자주 따라 들어간다",1],["항상 뒤늦게 뛰어든다",0]]],
+["실전","돈 관리에서 나의 약점을 아나요?",[["약점을 알고 시스템으로 보완한다",5],["대략 인식한다",3],["잘 모른다",1],["생각 안 해봤다",0]]],
+["저축","'통장 쪼개기'로 급여를 관리하나요?",[["급여·생활·저축·투자로 나눠 쓴다",5],["두세 개로 나눈다",3],["하나로 다 쓴다",1],["관리 개념이 없다",0]]],
+["소비","물건을 사기 전 '이건 자산일까 비용일까'를 따지나요?",[["항상 구분해 판단한다",5],["가끔 생각한다",3],["별로 안 따진다",1],["따져본 적 없다",0]]],
+["소득","'월급만으로 부자 되기 어렵다'는 말에?",[["그래서 자산·부수입을 함께 키운다",5],["공감하지만 아직 실천 못 함",3],["월급만 잘 모으면 된다고 본다",2],["생각해 본 적 없다",0]]]
+];
+
+/* ---------- 결과 등급 ---------- */
+const TIERS=[
+ {min:85,badge:"미래의 자산가",
+  desc:"당신은 이미 '부자의 언어'를 쓰고 있습니다. 저축·투자·소비의 균형이 탄탄하고, 시간을 내 편으로 만드는 습관이 몸에 뱄어요. 지금의 원칙을 오래 지킨다면 부는 자연스럽게 따라옵니다.",
+  pay:"복리가 눈덩이처럼 불어나는 '상위 1%'의 길",
+  tip:"이미 훌륭합니다. 이제 <b>돈의 언어를 다음 세대에 물려주는 단계</b>예요. 아이·가족과 함께 원칙을 나눠보세요."},
+ {min:70,badge:"성장하는 자산가",
+  desc:"꾸준히 부를 쌓아가는 든든한 유형입니다. 좋은 습관이 이미 여럿 자리 잡았고, 몇 가지만 더 다듬으면 자산의 속도가 눈에 띄게 붙습니다.",
+  pay:"매년 우상향하는 '꾸준한 부의 곡선'",
+  tip:"저축률을 <b>3~5%p만 더 끌어올리고</b>, 자동화(선저축·자동이체)로 의지에 기대지 않는 구조를 만들어 보세요."},
+ {min:55,badge:"균형 잡힌 관리자",
+  desc:"큰 실수 없이 안정적으로 돈을 다루는 유형입니다. 다만 '지키기'에 머물러 있어요. 돈이 스스로 일하게 만드는 투자·성장 습관을 더하면 판이 커집니다.",
+  pay:"안정 위에서 '자산 증식'으로 도약할 준비 단계",
+  tip:"비상금을 확보했다면, <b>여윳돈의 일부를 장기 적립식 투자</b>로 옮겨 시간의 힘을 빌려보세요."},
+ {min:40,badge:"성장 잠재형",
+  desc:"부자가 될 씨앗은 충분합니다. 다만 습관이 아직 들쭉날쭉해요. 지출을 '보이게' 만들고 저축을 '먼저' 하는 것부터 시작하면 지금과 완전히 달라집니다.",
+  pay:"작은 습관 하나로 방향을 바꿀 '전환점'",
+  tip:"이번 달부터 <b>가계부 1개월, 선저축 자동이체 1건</b>만 실천해 보세요. 작은 성공이 큰 변화를 부릅니다."},
+ {min:0,badge:"부의 새싹",
+  desc:"지금이 가장 좋은 출발점입니다. 부는 타고난 감각이 아니라 배우는 '언어'예요. 오늘 돈을 대하는 태도를 하나만 바꿔도, 10년 뒤의 당신은 크게 달라집니다.",
+  pay:"오늘부터 심는 '부의 첫 씨앗'",
+  tip:"거창할 필요 없어요. <b>돈이 무엇인지, 어떻게 흐르는지</b>부터 배워보세요. 그게 모든 부의 시작입니다."}
+];
+
+/* ---------- 로제트(길로쉐) 문양 생성 ---------- */
+function rosette(svg,size,rings,color){
+  const c=size/2, ns="http://www.w3.org/2000/svg";
+  svg.setAttribute("viewBox",`0 0 ${size} ${size}`);
+  let s="";
+  for(let i=0;i<rings;i++){
+    const rot=(360/rings)*i;
+    s+=`<ellipse cx="${c}" cy="${c}" rx="${size*0.46}" ry="${size*0.17}" fill="none" stroke="${color}" stroke-width="0.7" transform="rotate(${rot} ${c} ${c})"/>`;
+  }
+  for(let r=0.42;r>0.1;r-=0.1){
+    s+=`<circle cx="${c}" cy="${c}" r="${size*r}" fill="none" stroke="${color}" stroke-width="0.6"/>`;
+  }
+  svg.innerHTML=s;
+}
+function coverRing(svg){
+  const c=75; let s="";
+  for(let i=0;i<48;i++){
+    const rot=(360/48)*i;
+    s+=`<ellipse cx="${c}" cy="${c}" rx="66" ry="24" fill="none" stroke="#9A7A2E" stroke-width="0.6" opacity="0.55" transform="rotate(${rot} ${c} ${c})"/>`;
+  }
+  s+=`<circle cx="${c}" cy="${c}" r="58" fill="none" stroke="#1E6E4E" stroke-width="1.4" opacity="0.7"/>`;
+  s+=`<circle cx="${c}" cy="${c}" r="63" fill="none" stroke="#9A7A2E" stroke-width="0.8" opacity="0.6"/>`;
+  svg.innerHTML=s;
+}
+function drawSeal(svg,txt){
+  svg.innerHTML=`
+   <circle cx="50" cy="50" r="46" fill="none" stroke="#B3402F" stroke-width="3"/>
+   <circle cx="50" cy="50" r="38" fill="none" stroke="#B3402F" stroke-width="1.5"/>
+   <text x="50" y="63" text-anchor="middle" font-family="Noto Serif KR" font-weight="900" font-size="42" fill="#B3402F">富</text>
+   <path id="cp" d="M50,50 m-31,0 a31,31 0 1,1 62,0 a31,31 0 1,1 -62,0" fill="none"/>
+   <text font-family="Noto Sans KR" font-weight="700" font-size="8.5" fill="#B3402F" letter-spacing="2">
+     <textPath href="#cp" startOffset="0">돈의 언어 · WEALTH CERTIFICATE ·</textPath>
+   </text>`;
+}
+
+rosette(document.getElementById('rosetteTL'),220,20,'#1E6E4E');
+rosette(document.getElementById('rosetteBR'),220,20,'#9A7A2E');
+rosette(document.getElementById('rosetteRes'),240,22,'#9A7A2E');
+coverRing(document.getElementById('coverRing'));
+
+/* ---------- 게임 로직 ---------- */
+let quiz=[], idx=0, earned=0, maxpts=0;
+
+function pick20(){
+  const a=[...BANK];
+  for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}
+  return a.slice(0,20);
+}
+function start(){
+  quiz=pick20(); idx=0; earned=0; maxpts=0;
+  document.getElementById('cover').style.display='none';
+  document.getElementById('result').style.display='none';
+  document.getElementById('quiz').style.display='block';
+  render();
+  window.scrollTo(0,0);
+}
+function render(){
+  const [cat,q,opts]=quiz[idx];
+  document.getElementById('qnow').textContent=idx+1;
+  document.getElementById('qcat').textContent=cat;
+  document.getElementById('qtext').textContent=q;
+  document.getElementById('barFill').style.width=((idx+1)/20*100)+'%';
+  const marks=['A','B','C','D'];
+  // 보기 순서 셔플
+  const order=[0,1,2,3].sort(()=>Math.random()-0.5);
+  const box=document.getElementById('opts'); box.innerHTML='';
+  order.forEach((oi,vi)=>{
+    const [t,p]=opts[oi];
+    const b=document.createElement('button');
+    b.className='opt'; b.innerHTML=`<span class="mk">${marks[vi]}</span><span>${t}</span>`;
+    b.onclick=()=>answer(p,Math.max(...opts.map(o=>o[1])));
+    box.appendChild(b);
+  });
+  document.getElementById('quiz').querySelector('.content').classList.remove('fade');
+  void document.getElementById('quiz').offsetWidth;
+  document.getElementById('quiz').querySelector('.content').classList.add('fade');
+}
+function answer(p,mx){
+  earned+=p; maxpts+=mx; idx++;
+  if(idx>=20) showResult(); else render();
+  window.scrollTo(0,0);
+}
+function showResult(){
+  const score=Math.round(earned/maxpts*100);
+  const tier=TIERS.find(t=>score>=t.min);
+  document.getElementById('quiz').style.display='none';
+  const res=document.getElementById('result'); res.style.display='block';
+  document.getElementById('certNo').textContent='No. '+String(Math.floor(Math.random()*9000+1000));
+  document.getElementById('tierBadge').textContent=tier.badge;
+  document.getElementById('tierDesc').textContent=tier.desc;
+  document.getElementById('payoutV').textContent=tier.pay;
+  document.getElementById('tipBox').innerHTML='💡 '+tier.tip;
+  drawSeal(document.getElementById('seal'),'富');
+
+  // 점수 카운트업 + 원호 애니메이션
+  const arc=document.getElementById('scoreArc'), circ=502, numEl=document.getElementById('scoreNum');
+  let cur=0; const dur=1100, t0=performance.now();
+  (function step(now){
+    const k=Math.min(1,(now-t0)/dur), e=1-Math.pow(1-k,3);
+    numEl.textContent=Math.round(score*e);
+    arc.style.strokeDashoffset=circ-(circ*score/100)*e;
+    if(k<1) requestAnimationFrame(step);
+    else { numEl.textContent=score; document.getElementById('seal').classList.add('on'); }
+  })(t0);
+  window.scrollTo(0,0);
+}
+function restart(){
+  document.getElementById('seal').classList.remove('on');
+  document.getElementById('result').style.display='none';
+  document.getElementById('cover').style.display='block';
+  window.scrollTo(0,0);
+}
+function share(){
+  const score=document.getElementById('scoreNum').textContent;
+  const tier=document.getElementById('tierBadge').textContent;
+  const txt=`나의 부자 지수는 ${score}점! 유형: ${tier}\n[돈의 언어] 부자 지수 테스트에서 확인해보세요 📈`;
+  const done=()=>{const t=document.getElementById('toast');t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1800);};
+  if(navigator.share){ navigator.share({title:'부자 지수 테스트',text:txt}).catch(()=>{}); }
+  else if(navigator.clipboard){ navigator.clipboard.writeText(txt).then(done).catch(done); }
+  else done();
+}
+</script>
+</body>
+</html>
